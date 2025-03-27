@@ -31,7 +31,8 @@ void ADXL345_Init(void)
     data[0] = 0x09;
     HAL_I2C_Mem_Write(&hi2c1, ADXL345_ADDR, 0x31, 1, data, 1, 100);
 }
-
+bir şey oldu abi usbler çalışmıyor şu an :D
+abi bi bilgisayarı restleyip geliyorum sesini de duyamıyorum şu an
 void HMC5883L_Init(void)
 {
     uint8_t data[2];

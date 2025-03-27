@@ -13,6 +13,8 @@ extern "C"
     typedef enum
     {
         CALIBRATE_PID,
+        DEGREES_OF_YAW,
+        SET_DEPTH_CM,
         NUM_OF_RPC_SERVICES
     } rpc_service_t;
 
@@ -28,6 +30,16 @@ extern "C"
         float ki;
         float kd;
     } calibrate_pid_t;
+
+    typedef struct
+    {
+        float degrees;
+    } degrees_of_yaw_t;
+
+    typedef struct
+    {
+        float cm;
+    } set_depth_cm_t;
 
 #ifdef __cplusplus
 }
