@@ -19,7 +19,9 @@ float prevErrorX = 0, prevErrorY = 0;
 
 float pitch_error_prev = 0, roll_error_prev = 0;
 float pitch_integral = 0, roll_integral = 0;
+float rollAdjust, pitchAdjust;
 
+int pwm1,pwm2,pwm3,pwm4;
 
 static void esc_calibration_bidirectional(void);
 
@@ -155,15 +157,29 @@ static void update_motors(float pitch_setpoint,
                           float current_roll,
                           float dt)
 {
-    float pitch_adjust = pid_control(0, current_pitch, &pitch_integral, &pitch_error_prev, dt);
-    float roll_adjust = pid_control(0, current_roll, &roll_integral, &roll_error_prev, dt);
+	pitchAdjust = pid_control(0, current_pitch, &pitch_integral, &pitch_error_prev, dt);
+    rollAdjust = pid_control(0, current_roll, &roll_integral, &roll_error_prev, dt);
 
-    int pwm4 = 1500 + roll_adjust;
+//    if (!motorlar_durduruldu){
 
+	pwm1 = 1500 + pitchAdjust - rollAdjust; // Motor 1 - TIM1 CH1
+	pwm2 = 1500 + pitchAdjust + rollAdjust; // Motor 2 - TIM1 CH2
+	pwm3 = 1500 - pitchAdjust - rollAdjust; // Motor 3 - TIM1 CH3
+	pwm4 = 1500 - pitchAdjust + rollAdjust; // Motor 4 - TIM1 CH4
+
+
+//    }
+	pwm1 = fmax(1000, fmin(2000, pwm4));
+	pwm2 = fmax(1000, fmin(2000, pwm4));
+	pwm3 = fmax(1000, fmin(2000, pwm4));
     pwm4 = fmax(1000, fmin(2000, pwm4));
 
+    __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, pwm1);
+    __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, pwm2);
+    __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, pwm3);
     __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, pwm4);
 }
+
 
 static void calibrate_gyro(float* offsetX, float* offsetY, float* offsetZ)
 {

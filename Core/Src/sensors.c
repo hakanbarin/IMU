@@ -4,11 +4,32 @@
 #define ITG3205_ADDR (0x68 << 1) // AD0 LOW ise 0x68, HIGH ise 0x69
 #define ADXL345_ADDR (0x53 << 1) // SDO LOW ise 0x53
 #define HMC5883L_ADDR (0x1E << 1)
+#define BAR30_I2C_ADDR  0x76 << 1
 
 // Manyetometre ofset ve ölçek faktörleri
 float offset_x = 0, offset_y = 0, offset_z = 0;
 float offset_x_mg = 0, offset_y_mg = 0, offset_z_mg = 0;
 float scale_x = 1, scale_y = 1, scale_z = 1;
+
+void BAR30_Reset() {
+    uint8_t cmd = 0x1E;
+    HAL_I2C_Master_Transmit(&hi2c1, BAR30_I2C_ADDR, &cmd, 1, HAL_MAX_DELAY);
+    HAL_Delay(10); // Sensör resetlendikten sonra bekleme süresi
+}
+
+uint32_t BAR30_ReadADC() {
+    uint8_t cmd = 0x00;
+    uint8_t data[3];
+    HAL_I2C_Master_Transmit(&hi2c1, BAR30_I2C_ADDR, &cmd, 1, HAL_MAX_DELAY);
+    HAL_I2C_Master_Receive(&hi2c1, BAR30_I2C_ADDR, data, 3, HAL_MAX_DELAY);
+    return (data[0] << 16) | (data[1] << 8) | data[2];
+}
+
+void BAR30_StartPressureMeasurement() {
+    uint8_t cmd = 0x40; // Basınç ölçüm başlatma komutu
+    HAL_I2C_Master_Transmit(&hi2c1, BAR30_I2C_ADDR, &cmd, 1, HAL_MAX_DELAY);
+    HAL_Delay(10); // Ölçüm süresi
+}
 
 void ITG3205_Init(void)
 {
@@ -31,8 +52,6 @@ void ADXL345_Init(void)
     data[0] = 0x09;
     HAL_I2C_Mem_Write(&hi2c1, ADXL345_ADDR, 0x31, 1, data, 1, 100);
 }
-bir şey oldu abi usbler çalışmıyor şu an :D
-abi bi bilgisayarı restleyip geliyorum sesini de duyamıyorum şu an
 void HMC5883L_Init(void)
 {
     uint8_t data[2];
