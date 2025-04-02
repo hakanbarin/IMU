@@ -20,11 +20,13 @@ extern "C"
 
     void HMC5883L_Read_Calibrated(float* mx, float* my, float* mz);
 
-    void BAR30_Reset();
+    void BAR_30_Read();
 
-    uint32_t BAR30_ReadADC();
+    int BAR30_init(void); //bool yapılacak
 
-    void BAR30_StartPressureMeasurement();
+    void calculate();
+
+    uint8_t crc4(uint16_t);
 
 #ifdef __cplusplus
 }

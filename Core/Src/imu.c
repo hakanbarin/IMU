@@ -20,8 +20,8 @@ float prevErrorX = 0, prevErrorY = 0;
 float pitch_error_prev = 0, roll_error_prev = 0;
 float pitch_integral = 0, roll_integral = 0;
 float rollAdjust, pitchAdjust;
-
-int pwm1,pwm2,pwm3,pwm4;
+int desiredYaw = 0; //İSTENEN YAW AÇISI
+int pwm1,pwm2,pwm3,pwm4,pwm5,pwm6,pwm7,pwm8;
 
 static void esc_calibration_bidirectional(void);
 
@@ -157,26 +157,41 @@ static void update_motors(float pitch_setpoint,
                           float current_roll,
                           float dt)
 {
-	pitchAdjust = pid_control(0, current_pitch, &pitch_integral, &pitch_error_prev, dt);
-    rollAdjust = pid_control(0, current_roll, &roll_integral, &roll_error_prev, dt);
+	
+    pitchAdjust = pidControl(0, currentPitch, &pitchIntegral, &pitchErrorPrev, dt);
+    rollAdjust  = pidControl(0, currentRoll, &rollIntegral, &rollErrorPrev, dt);
+    yawAdjust = pidControl(desiredYaw, currentYaw, &yawIntegral, &yawErrorPrev, dt );
 
-//    if (!motorlar_durduruldu){
+//	8 MOTORLU ROV İÇİN
+//     pwm1 = 1500 + pitchAdjust - rollAdjust; // Motor 1 - TIM1 CH1		//sol ön üst
+//     pwm2 = 1500 + pitchAdjust + rollAdjust; // Motor 2 - TIM1 CH2		//sağ ön üst
+//     pwm3 = 1500 - pitchAdjust + rollAdjust; // Motor 3 - TIM1 CH3		//sağ arka üst
+//     pwm4 = 1500 - pitchAdjust - rollAdjust; // Motor 4 - TIM1 CH4		//sol arka üst
+    														//TIMERLARI BELLİ DEĞİL
+//     pwm5 = 1500 + yawAdjust;					// Motor 5 - TIM1 CH1		//sol ön
+//     pwm6 = 1500 - yawAdjust; 				// Motor 6 - TIM1 CH2		//sağ ön
+//     pwm7 = 1500 - yawAdjust; 				// Motor 7 - TIM1 CH3		//sağ arka
+//     pwm8 = 1500 + yawAdjust; 				// Motor 8 - TIM1 CH4		//sol arka
 
-	pwm1 = 1500 + pitchAdjust - rollAdjust; // Motor 1 - TIM1 CH1
-	pwm2 = 1500 + pitchAdjust + rollAdjust; // Motor 2 - TIM1 CH2
-	pwm3 = 1500 - pitchAdjust - rollAdjust; // Motor 3 - TIM1 CH3
-	pwm4 = 1500 - pitchAdjust + rollAdjust; // Motor 4 - TIM1 CH4
+    int pwm4 = 1500 + pitchAdjust + rollAdjust; // Motor 4 - TIM1 CH4
 
 
-//    }
-	pwm1 = fmax(1000, fmin(2000, pwm4));
-	pwm2 = fmax(1000, fmin(2000, pwm4));
-	pwm3 = fmax(1000, fmin(2000, pwm4));
+//    pwm1 = fmax(1100, fmin(1900, pwm1));
+//    pwm2 = fmax(1100, fmin(1900, pwm2));
+//    pwm3 = fmax(1100, fmin(1900, pwm3));
+//    pwm4 = fmax(1100, fmin(1900, pwm4));
+//    pwm5 = fmax(1100, fmin(1900, pwm5));
+//    pwm6 = fmax(1100, fmin(1900, pwm6));
+//    pwm7 = fmax(1100, fmin(1900, pwm7));
+//    pwm8 = fmax(1100, fmin(1900, pwm8));
+
     pwm4 = fmax(1000, fmin(2000, pwm4));
+//    printf("%.2d, %.2d, %.2d, %.2d\n", pwm1, pwm2, pwm3, pwm4);
+//    printf("%.2f, %.2f\n", pitchAdjust, rollAdjust);
 
-    __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, pwm1);
-    __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, pwm2);
-    __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, pwm3);
+//    __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, pwm1);
+//    __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, pwm2);
+//    __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, pwm3);
     __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, pwm4);
 }
 
