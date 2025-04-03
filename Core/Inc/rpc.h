@@ -9,23 +9,15 @@ extern "C"
 #include <stdint.h>
 #include <stdbool.h>
 
-#define MAX(a, b) ((a) > (b) ? (a) : (b))
-
     typedef enum
     {
         CALIBRATE_PID,
         SET_DEGREES_OF_YAW,
         SET_DEPTH_CM,
-		COEFFICIENT_COMPLEMANTARY_FILTER,
-		PWM_MOTORS_FOR_STOP,
+        COEFFICIENT_COMPLEMANTARY_FILTER,
+        PWM_MOTORS_FOR_STOP,
         NUM_OF_RPC_SERVICES
     } rpc_service_t;
-
-    typedef struct
-    {
-        rpc_service_t service;
-        uint8_t data;
-    } rpc_header_t;
 
     typedef struct
     {
@@ -45,34 +37,31 @@ extern "C"
     } set_depth_cm_t;
 
     typedef struct
-        {
-           int pwm1;
-           int pwm2;
-           int pwm3;
-           int pwm4;
-           int pwm5;		// SOL ÖN 1, SAĞ ÖN 2, SAĞ ARKA 3, SOL ARKA 4, SOL ÜST 5, SAĞ ÜST 6, SAĞ ALT 7, SOL ALT 8. MOTOR
-           int pwm6;		// AYNI ZAMANDA MOTORLARI AYRI AYRI SÜRMEK İÇİN
-           int pwm7;		// BU KOMUTTAN SONRA TEKRARDAN MOTORLARI ÇALIŞTIRMAM GEREKİYOR
-           int pwm8;
+    {
+        int pwm1;
+        int pwm2;
+        int pwm3;
+        int pwm4;
+        int pwm5; // SOL ÖN 1, SAĞ ÖN 2, SAĞ ARKA 3, SOL ARKA 4, SOL ÜST 5, SAĞ ÜST 6, SAĞ ALT 7, SOL ALT 8. MOTOR
+        int pwm6; // AYNI ZAMANDA MOTORLARI AYRI AYRI SÜRMEK İÇİN
+        int pwm7; // BU KOMUTTAN SONRA TEKRARDAN MOTORLARI ÇALIŞTIRMAM GEREKİYOR
+        int pwm8;
+    } pwm_motors_for_stop_t;
 
-        } pwm_motors_for_stop;
+    typedef union
+    {
+        set_degrees_of_yaw_t p1;
+        set_depth_cm_t p2;
+        pwm_motors_for_stop_t p3;
+    } rpc_param_u;
 
+    typedef struct
+    {
+        rpc_service_t service;
+        uint8_t data[sizeof(rpc_param_u)];
+    } rpc_message_t;
 
-
-//extern bool motorlar_durduruldu = false;
-//
-//void handle_rpc_command(rpc_header_t *command) {
-//
-//		if(command->service == PWM_MOTORS_FOR_STOP){
-//			motorlar_durduruldu = true;
-//			motorlari_durdur();  // Motorları durdurma fonksiyonunu çağır
-//		}
-//		else{
-//			motorlar_durduruldu = false;
-//		}
-//
-//}
-
+    extern volatile uint8_t rpc_rx_buffer[sizeof(rpc_message_t)];
 
 #ifdef __cplusplus
 }
