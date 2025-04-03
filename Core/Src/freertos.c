@@ -25,7 +25,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "semphr.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -45,21 +45,22 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN Variables */
+SemaphoreHandle_t rpc_rx_semaphore;
 
 /* USER CODE END Variables */
 /* Definitions for imu_task */
 osThreadId_t imu_taskHandle;
 const osThreadAttr_t imu_task_attributes = {
-  .name = "imu_task",
-  .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityNormal,
+    .name = "imu_task",
+    .stack_size = 128 * 4,
+    .priority = (osPriority_t)osPriorityNormal,
 };
 /* Definitions for rpc_task */
 osThreadId_t rpc_taskHandle;
 const osThreadAttr_t rpc_task_attributes = {
-  .name = "rpc_task",
-  .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityNormal,
+    .name = "rpc_task",
+    .stack_size = 128 * 4,
+    .priority = (osPriority_t)osPriorityNormal,
 };
 
 /* Private function prototypes -----------------------------------------------*/
@@ -73,46 +74,47 @@ void rpc_thread(void *argument);
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
 /**
-  * @brief  FreeRTOS initialization
-  * @param  None
-  * @retval None
-  */
-void MX_FREERTOS_Init(void) {
-  /* USER CODE BEGIN Init */
+ * @brief  FreeRTOS initialization
+ * @param  None
+ * @retval None
+ */
+void MX_FREERTOS_Init(void)
+{
+    /* USER CODE BEGIN Init */
 
-  /* USER CODE END Init */
+    /* USER CODE END Init */
 
-  /* USER CODE BEGIN RTOS_MUTEX */
+    /* USER CODE BEGIN RTOS_MUTEX */
     /* add mutexes, ... */
-  /* USER CODE END RTOS_MUTEX */
+    /* USER CODE END RTOS_MUTEX */
 
-  /* USER CODE BEGIN RTOS_SEMAPHORES */
+    /* USER CODE BEGIN RTOS_SEMAPHORES */
     /* add semaphores, ... */
-  /* USER CODE END RTOS_SEMAPHORES */
+    rpc_rx_semaphore = xSemaphoreCreateBinary();
+    /* USER CODE END RTOS_SEMAPHORES */
 
-  /* USER CODE BEGIN RTOS_TIMERS */
+    /* USER CODE BEGIN RTOS_TIMERS */
     /* start timers, add new ones, ... */
-  /* USER CODE END RTOS_TIMERS */
+    /* USER CODE END RTOS_TIMERS */
 
-  /* USER CODE BEGIN RTOS_QUEUES */
+    /* USER CODE BEGIN RTOS_QUEUES */
     /* add queues, ... */
-  /* USER CODE END RTOS_QUEUES */
+    /* USER CODE END RTOS_QUEUES */
 
-  /* Create the thread(s) */
-  /* creation of imu_task */
-  imu_taskHandle = osThreadNew(imu_thread, NULL, &imu_task_attributes);
+    /* Create the thread(s) */
+    /* creation of imu_task */
+    imu_taskHandle = osThreadNew(imu_thread, NULL, &imu_task_attributes);
 
-  /* creation of rpc_task */
-  rpc_taskHandle = osThreadNew(rpc_thread, NULL, &rpc_task_attributes);
+    /* creation of rpc_task */
+    rpc_taskHandle = osThreadNew(rpc_thread, NULL, &rpc_task_attributes);
 
-  /* USER CODE BEGIN RTOS_THREADS */
+    /* USER CODE BEGIN RTOS_THREADS */
     /* add threads, ... */
-  /* USER CODE END RTOS_THREADS */
+    /* USER CODE END RTOS_THREADS */
 
-  /* USER CODE BEGIN RTOS_EVENTS */
+    /* USER CODE BEGIN RTOS_EVENTS */
     /* add events, ... */
-  /* USER CODE END RTOS_EVENTS */
-
+    /* USER CODE END RTOS_EVENTS */
 }
 
 /* USER CODE BEGIN Header_imu_thread */
@@ -124,13 +126,13 @@ void MX_FREERTOS_Init(void) {
 /* USER CODE END Header_imu_thread */
 __weak void imu_thread(void *argument)
 {
-  /* USER CODE BEGIN imu_thread */
+    /* USER CODE BEGIN imu_thread */
     /* Infinite loop */
     for (;;)
     {
         osDelay(1);
     }
-  /* USER CODE END imu_thread */
+    /* USER CODE END imu_thread */
 }
 
 /* USER CODE BEGIN Header_rpc_thread */
@@ -142,17 +144,16 @@ __weak void imu_thread(void *argument)
 /* USER CODE END Header_rpc_thread */
 __weak void rpc_thread(void *argument)
 {
-  /* USER CODE BEGIN rpc_thread */
+    /* USER CODE BEGIN rpc_thread */
     /* Infinite loop */
     for (;;)
     {
         osDelay(1);
     }
-  /* USER CODE END rpc_thread */
+    /* USER CODE END rpc_thread */
 }
 
 /* Private application code --------------------------------------------------*/
 /* USER CODE BEGIN Application */
 
 /* USER CODE END Application */
-
