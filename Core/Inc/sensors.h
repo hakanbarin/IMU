@@ -22,7 +22,7 @@ extern "C"
 
     void BAR_30_Read();
 
-    int BAR30_init(void); //bool yapılacak
+    int BAR30_init(void); // return value bool yapılacak
 
     void calculate();
 

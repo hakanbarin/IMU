@@ -12,7 +12,7 @@ extern "C"
     typedef enum
     {
         CALIBRATE_PID,
-        SET_DEGREES_OF_YAW,
+        SET_DEGREES_OF_RPY,
         SET_DEPTH_CM,
         COEFFICIENT_COMPLEMANTARY_FILTER,
         PWM_MOTORS_FOR_STOP,
@@ -38,14 +38,14 @@ extern "C"
 
     typedef struct
     {
-        int pwm1;
-        int pwm2;
-        int pwm3;
-        int pwm4;
-        int pwm5; // SOL ÖN 1, SAĞ ÖN 2, SAĞ ARKA 3, SOL ARKA 4, SOL ÜST 5, SAĞ ÜST 6, SAĞ ALT 7, SOL ALT 8. MOTOR
-        int pwm6; // AYNI ZAMANDA MOTORLARI AYRI AYRI SÜRMEK İÇİN
-        int pwm7; // BU KOMUTTAN SONRA TEKRARDAN MOTORLARI ÇALIŞTIRMAM GEREKİYOR
-        int pwm8;
+        uint16_t pwm1;
+        uint16_t pwm2;
+        uint16_t pwm3;  // bunları uint16_t olarak tanımlasam olur mu
+        uint16_t pwm4;
+        uint16_t pwm5; // SOL ÖN 1, SAĞ ÖN 2, SAĞ ARKA 3, SOL ARKA 4, SOL ÜST 5, SAĞ ÜST 6, SAĞ ALT 7, SOL ALT 8. MOTOR
+        uint16_t pwm6; // AYNI ZAMANDA MOTORLARI AYRI AYRI SÜRMEK İÇİN
+        uint16_t pwm7; // BU KOMUTTAN SONRA TEKRARDAN MOTORLARI ÇALIŞTIRMAM GEREKİYOR
+        uint16_t pwm8;
     } pwm_motors_for_stop_t;
 
     typedef union
