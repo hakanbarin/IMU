@@ -12,7 +12,7 @@ extern "C"
     typedef enum
     {
         CALIBRATE_PID,
-        SET_DEGREES_OF_RPY,
+        SET_DEGREES_OF_YAW,
         SET_DEPTH_CM,
         COEFFICIENT_COMPLEMANTARY_FILTER,
         PWM_MOTORS_FOR_STOP,
@@ -48,17 +48,16 @@ extern "C"
         uint16_t pwm8;
     } pwm_motors_for_stop_t;
 
-    typedef union
-    {
-        set_degrees_of_yaw_t p1;
-        set_depth_cm_t p2;
-        pwm_motors_for_stop_t p3;
-    } rpc_param_u;
-
     typedef struct
     {
         rpc_service_t service;
-        uint8_t data[sizeof(rpc_param_u)];
+        union
+		{
+			set_degrees_of_yaw_t p1;
+			set_depth_cm_t p2;
+			pwm_motors_for_stop_t p3;
+		} data;
+
     } rpc_message_t;
 
     extern volatile uint8_t rpc_rx_buffer[sizeof(rpc_message_t)];

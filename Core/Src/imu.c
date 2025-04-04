@@ -1,7 +1,9 @@
 #include "tim.h"
-#include <math.h>
+#include "math.h"
 #include "cmsis_os.h"
 #include "sensors.h"
+#include "task.h"
+#include "semphr.h"
 
 #define CALIBRATION_SAMPLES (200)
 #define CALIBRATION_SAMPLES_MAG (1000)
@@ -12,26 +14,20 @@ float ALPHA2 = 0.2f;
 float KP = 4.f;
 float KI = 0.02f;
 float KD = 0.05f;
+float depth;
 
 // PID Değişkenleri
 float integralX = 0, integralY = 0, pwmPITCH, pwmROLL;
 float prevErrorX = 0, prevErrorY = 0;
 
-float pitch_error_prev = 0, roll_error_prev = 0;
-float pitch_integral = 0, roll_integral = 0;
-float rollAdjust, pitchAdjust;
-int desiredYaw = 0; // İSTENEN YAW AÇISI
-int pwm1, pwm2, pwm3, pwm4, pwm5, pwm6, pwm7, pwm8;
+float pitch_error_prev = 0, roll_error_prev = 0, yaw_error_prev = 0, depth_error = 0;
+float pitch_integral = 0, roll_integral = 0, yaw_integral = 0, depth_integral = 0;
+float pitch_adjust, roll_adjust, yaw_adjust;
+uint16_t pwm1,pwm2,pwm3,pwm4,pwm5,pwm6,pwm7,pwm8;
 
 static void esc_calibration_bidirectional(void);
 
 static void start_engine(void);
-
-static float pid_control(float setpoint,
-                         float measured,
-                         float *integral,
-                         float *prev_error,
-                         float dt);
 
 static void update_motors(float pitch_setpoint,
                           float roll_setpoint,
@@ -51,12 +47,13 @@ void imu_thread(void *argument)
     int16_t ax, ay, az;
     int16_t temp;
 
+
     float gyro_x_offset, gyro_y_offset, gyro_z_offset;
 
     ITG3205_Init();
     ADXL345_Init();
     HMC5883L_Init();
-
+    BAR30_init();
     calibrate_gyro(&gyro_x_offset, &gyro_y_offset, &gyro_z_offset);
 
     uint32_t last_time = HAL_GetTick();
@@ -65,9 +62,10 @@ void imu_thread(void *argument)
 
     while (1)
     {
+
         ITG3205_Read(&temp, &gx, &gy, &gz);
         ADXL345_Read(&ax, &ay, &az);
-
+        BAR_30_Read(&depth);
         uint32_t current_time = HAL_GetTick();
         const float delta_time = (current_time - last_time) / 1000.0f;
         last_time = current_time;
@@ -130,7 +128,7 @@ static void start_engine(void)
     HAL_Delay(3000);
 }
 
-static float pid_control(float setpoint,
+float pid_control(float setpoint,
                          float measured,
                          float *integral,
                          float *prev_error,
@@ -151,6 +149,18 @@ static float pid_control(float setpoint,
 
     return (KP * error) + (KI * (*integral));
 }
+//BUNU GÜNCELLE
+void yaw_update_motor(float desired_yaw, float dt){
+
+//	 int yaw_adjust = pid_control(desired_yaw, current_yaw, &yaw_integral, &yaw_error_prev, dt);
+//	 int pwm1,pwm2,pwm3,pwm4;
+//
+//	 __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, pwm1);
+//	 __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, pwm2);
+//	 __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, pwm3);
+//	 __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, pwm4);
+}
+
 
 static void update_motors(float pitch_setpoint,
                           float roll_setpoint,
@@ -159,9 +169,8 @@ static void update_motors(float pitch_setpoint,
                           float dt)
 {
 
-    pitchAdjust = pidControl(0, currentPitch, &pitchIntegral, &pitchErrorPrev, dt);
-    rollAdjust = pidControl(0, currentRoll, &rollIntegral, &rollErrorPrev, dt);
-    yawAdjust = pidControl(desiredYaw, currentYaw, &yawIntegral, &yawErrorPrev, dt);
+    pitch_adjust = pid_control(0, current_pitch, &pitch_integral, &pitch_error_prev, dt);
+    roll_adjust = pid_control(0, current_roll, &roll_integral, &roll_error_prev, dt);
 
     //	8 MOTORLU ROV İÇİN
     //     pwm1 = 1500 + pitchAdjust - rollAdjust; // Motor 1 - TIM1 CH1		//sol ön üst
@@ -173,8 +182,10 @@ static void update_motors(float pitch_setpoint,
     //     pwm6 = 1500 - yawAdjust; 				// Motor 6 - TIM1 CH2		//sağ ön
     //     pwm7 = 1500 - yawAdjust; 				// Motor 7 - TIM1 CH3		//sağ arka
     //     pwm8 = 1500 + yawAdjust; 				// Motor 8 - TIM1 CH4		//sol arka
-
-    int pwm4 = 1500 + pitchAdjust + rollAdjust; // Motor 4 - TIM1 CH4
+	xSemaphoreTake(pwm_mutexHandle, portMAX_DELAY);
+    pwm4 = 1500 + pitch_adjust + roll_adjust; // Motor 4 - TIM1 CH4
+    pwm4 = fmax(1000, fmin(2000, pwm4));
+	xSemaphoreGive(pwm_mutexHandle);
 
     //    pwm1 = fmax(1100, fmin(1900, pwm1));
     //    pwm2 = fmax(1100, fmin(1900, pwm2));
@@ -185,7 +196,7 @@ static void update_motors(float pitch_setpoint,
     //    pwm7 = fmax(1100, fmin(1900, pwm7));
     //    pwm8 = fmax(1100, fmin(1900, pwm8));
 
-    pwm4 = fmax(1000, fmin(2000, pwm4));
+
     //    printf("%.2d, %.2d, %.2d, %.2d\n", pwm1, pwm2, pwm3, pwm4);
     //    printf("%.2f, %.2f\n", pitchAdjust, rollAdjust);
 
@@ -216,27 +227,26 @@ static void calibrate_gyro(float *offsetX, float *offsetY, float *offsetZ)
     *offsetZ = sumZ / CALIBRATION_SAMPLES;
 }
 
+// THREAD EKLENECEK
+void change_PWM_for_depth(float desired_depth, float dt){
 
-void change_PWM_for_depth(float depth, float dt){
+//    while(1){
+	float PWM = pid_control(desired_depth, depth, &depth_integral, &depth_error, dt);
 
-    while(1){ //SADECE 1 KERE ÇALIŞSA YETER
-        float PWM = pidControl(desired_Depth, depth, &depthIntegral, &depthError, dt);
-        
-        pwm1 = 1500 + PWM; // Motor 1 - TIM1 CH1		//sol ön üst
-        pwm2 = 1500 + PWM; // Motor 2 - TIM1 CH2		//sağ ön üst
-        pwm3 = 1500 + PWM; // Motor 3 - TIM1 CH3		//sağ arka üst
-        pwm4 = 1500 + PWM; // Motor 4 - TIM1 CH4		//sol arka üst
-        
-        __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, pwm1);
-        __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, pwm2);
-        __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, pwm3);
-        __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, pwm4);
-    }
+	pwm1 = 1500 + PWM; // Motor 1 - TIM1 CH1		//sol ön üst
+	pwm2 = 1500 + PWM; // Motor 2 - TIM1 CH2		//sağ ön üst
+	pwm3 = 1500 + PWM; // Motor 3 - TIM1 CH3		//sağ arka üst
+	pwm4 = 1500 + PWM; // Motor 4 - TIM1 CH4		//sol arka üst
 
+//	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, pwm1);
+//	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, pwm2);
+//	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, pwm3);
+//	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, pwm4);
+//    }
 }
 
 void PWM_FOR_SINGLE_MOTOR_CONTROL(int pwm1, int pwm2, int pwm3, int pwm4,  //FOR STOP OR DRIVE ENGINES ONE BY ONE
-                                  int pwm5, int pwm6, int pwm7,int pwm8,)
+                                  int pwm5, int pwm6, int pwm7,int pwm8)
 {
     __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, pwm1);
     __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, pwm2);

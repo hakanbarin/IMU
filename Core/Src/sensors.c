@@ -24,7 +24,7 @@ float offset_x = 0, offset_y = 0, offset_z = 0;
 float offset_x_mg = 0, offset_y_mg = 0, offset_z_mg = 0;
 float scale_x = 1, scale_y = 1, scale_z = 1;
 
-void BAR_30_Read()
+void BAR_30_Read(float *depth)
 {
     uint8_t buffer[3];
     HAL_I2C_Master_Transmit(&hi2c1, MS5837_ADDR_Write, &MS5837_CONVERT_D1_8192, 1, HAL_MAX_DELAY);
@@ -51,7 +51,7 @@ void BAR_30_Read()
 
     // 2048 OSR de MIN 3.72 MAX 4.54, ORTALAMA OLARAKTA 4.13 SANİYEDE DÖNÜŞÜM YAPIYOR.
 
-    calculate();
+    *depth = calculate();
 }
 
 int BAR30_init(void)
@@ -83,7 +83,34 @@ int BAR30_init(void)
     return 0;
 }
 
-void calculate()
+uint8_t crc4(uint16_t n_prom[]) { //BU KODA BAK DİREKT OLARAK DATASHEETTE AYNI KOD VAR
+    uint16_t n_rem = 0;
+    uint8_t crc = 0;
+
+    n_prom[0] = (n_prom[0]) & 0x0FFF;  // PROM verisinin 12 bitlik kısmını al
+
+    for (uint8_t i = 0; i < 16; i++) {
+        if (i % 2 == 1) {
+            n_rem ^= (n_prom[i >> 1] & 0x00FF);
+        } else {
+            n_rem ^= (n_prom[i >> 1] >> 8);
+        }
+
+        for (uint8_t n_bit = 8; n_bit > 0; n_bit--) {
+            if (n_rem & 0x8000) {
+                n_rem = (n_rem << 1) ^ 0x3000;
+            } else {
+                n_rem = (n_rem << 1);
+            }
+        }
+    }
+
+    crc = (n_rem >> 12) & 0x000F;  // CRC'nin son 4 bitini al
+    return crc ^ 0x00;
+}
+
+
+float calculate()
 {
     // Değişken tanımlamaları
     int32_t dT = 0;
@@ -126,7 +153,9 @@ void calculate()
 
     // Telafi edilmiş basınç hesaplama
 
-    P = (((D1 * SENS2) / 2097152L - OFF2) / 8192L) / 10; // DİREKT OLARAK CM VERİYOR
+    P = (((D1 * SENS2) / 2097152L - OFF2) / 8192L) / 10;
+    return P;
+    // DİREKT OLARAK CM VERİYOR
     // BUNLARIN HEPSİ DATASHEETTE VAR
 }
 

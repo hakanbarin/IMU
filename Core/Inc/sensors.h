@@ -24,9 +24,9 @@ extern "C"
 
     int BAR30_init(void); // return value bool yapılacak
 
-    void calculate();
+    float calculate();
 
-    uint8_t crc4(uint16_t);
+    uint8_t crc4(uint16_t n_prom[]);
 
 #ifdef __cplusplus
 }

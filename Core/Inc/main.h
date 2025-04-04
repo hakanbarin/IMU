@@ -31,7 +31,8 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "semphr.h"
+#include "cmsis_os.h"
+#include "rpc.h"
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
@@ -41,12 +42,13 @@ extern "C" {
 
 /* Exported constants --------------------------------------------------------*/
 /* USER CODE BEGIN EC */
-
+extern osMessageQueueId_t rpc_queueHandle;
+extern osMutexId_t depth_mutexHandle;
+extern osMutexId_t pwm_mutexHandle;
 /* USER CODE END EC */
 
 /* Exported macro ------------------------------------------------------------*/
 /* USER CODE BEGIN EM */
-extern SemaphoreHandle_t rpc_rx_semaphore;
 
 /* USER CODE END EM */
 
@@ -60,6 +62,7 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 #define PWM_PREDIV 48
 #define PWM_PERIOD 20000
+#define RPC_MESSAGE_SIZE sizeof(rpc_message_t)
 #define B1_Pin GPIO_PIN_13
 #define B1_GPIO_Port GPIOC
 #define USART_TX_Pin GPIO_PIN_2
