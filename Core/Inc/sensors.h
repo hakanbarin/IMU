@@ -20,7 +20,7 @@ extern "C"
 
     void HMC5883L_Read_Calibrated(float* mx, float* my, float* mz);
 
-    void BAR_30_Read();
+    void BAR30_Read();
 
     int BAR30_init(void); // return value bool yapılacak
 

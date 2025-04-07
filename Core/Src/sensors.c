@@ -24,7 +24,7 @@ float offset_x = 0, offset_y = 0, offset_z = 0;
 float offset_x_mg = 0, offset_y_mg = 0, offset_z_mg = 0;
 float scale_x = 1, scale_y = 1, scale_z = 1;
 
-void BAR_30_Read(float *depth)
+void BAR30_Read(float *depth)
 {
     uint8_t buffer[3];
     HAL_I2C_Master_Transmit(&hi2c1, MS5837_ADDR_Write, &MS5837_CONVERT_D1_8192, 1, HAL_MAX_DELAY);

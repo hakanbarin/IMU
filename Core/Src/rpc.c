@@ -16,11 +16,15 @@ static void calibrate_PID(void *raw_input);
 static void set_degrees_of_yaw(void *raw_input);
 static void set_depth_cm(void *raw_input);
 static void pwm_motors_for_drive_one_by_one(void *raw_input);
+static void coefficient_complemantary_filters(void *raw_input);
+static void for_arm(void *raw_input);
 
 static const rpc_handler_t RPC_SERVICE_MAP[NUM_OF_RPC_SERVICES] = {calibrate_PID,
 													 set_degrees_of_yaw,
                                                      set_depth_cm,
-													 pwm_motors_for_drive_one_by_one};
+													 coefficient_complemantary_filters,
+													 pwm_motors_for_drive_one_by_one,
+													 for_arm};
 
 void rpc_thread(void *argument)
 {
@@ -37,23 +41,20 @@ void rpc_thread(void *argument)
 
 static void calibrate_PID(void *raw_input){
 
-//	calibrate_pid_t *input = raw_input;
-
+	calibrate_pid_t *input = raw_input;
+	KP = input->kp;
+	KI = input->ki;
+	KD = input->kd;
 }
 
 
 static void set_degrees_of_yaw(void *raw_input) // abi burada yaw açısını da updatemotorda değiştiriyorum ondan dolayı fonksiyonu çağırmam gerekiyor
 {                                               // onun yerine ayrı bir fonksiyon olarak mı çağırayım
-	static uint32_t last_time = 0;
+
     set_degrees_of_yaw_t *input = raw_input;
-    // // todo
-     last_time = xTaskGetTickCount();
-     const uint32_t now = xTaskGetTickCount();
 
-     const float dt = (now - last_time) / 1000.0f; //saniye
-     last_time = now;
+    desired_yaw = input->degrees;
 
-     yaw_update_motor(input->degrees, dt);
 }
 
 static void set_depth_cm(void *raw_input)
@@ -63,6 +64,17 @@ static void set_depth_cm(void *raw_input)
     desired_depth = input->cm;
     xSemaphoreGive(depth_mutexHandle);
 }
+
+static void coefficient_complemantary_filters(void *raw_input){
+
+	coefficient_complemantary_t *input = raw_input;
+
+	ALPHA  = input->alpha_for_pitch;
+	ALPHA1 = input->alpha_for_yaw;
+	ALPHA2 = input->alpha_for_roll;
+	alpha_for_stabilize = input->alpha_for_stabilize;
+}
+
 
 static void pwm_motors_for_drive_one_by_one(void *raw_input)
 {
@@ -80,3 +92,13 @@ static void pwm_motors_for_drive_one_by_one(void *raw_input)
 //       8        7
 //   4               3
 }
+
+static void for_arm(void *raw_input){
+	for_arm_t *input = raw_input;
+
+	is_armed = input->arm_or_disarm;
+}
+
+
+
+

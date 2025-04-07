@@ -16,6 +16,7 @@ extern "C"
         SET_DEPTH_CM,
         COEFFICIENT_COMPLEMANTARY_FILTER,
         PWM_MOTORS_FOR_STOP,
+		FOR_ARM,
         NUM_OF_RPC_SERVICES
     } rpc_service_t;
 
@@ -37,17 +38,30 @@ extern "C"
     } set_depth_cm_t;
 
     typedef struct
+	{
+    	float alpha_for_pitch;
+    	float alpha_for_yaw;
+    	float alpha_for_roll;
+    	float alpha_for_stabilize;
+
+	} coefficient_complemantary_t;
+
+    typedef struct
     {
         uint16_t pwm1;
         uint16_t pwm2;
         uint16_t pwm3;  // bunları uint16_t olarak tanımlasam olur mu
         uint16_t pwm4;
-        uint16_t pwm5; // SOL ÖN 1, SAĞ ÖN 2, SAĞ ARKA 3, SOL ARKA 4, SOL ÜST 5, SAĞ ÜST 6, SAĞ ALT 7, SOL ALT 8. MOTOR
-        uint16_t pwm6; // AYNI ZAMANDA MOTORLARI AYRI AYRI SÜRMEK İÇİN
-        uint16_t pwm7; // BU KOMUTTAN SONRA TEKRARDAN MOTORLARI ÇALIŞTIRMAM GEREKİYOR
+        uint16_t pwm5; 	// SOL ÖN 1, SAĞ ÖN 2, SAĞ ARKA 3, SOL ARKA 4, SOL ÜST 5, SAĞ ÜST 6, SAĞ ALT 7, SOL ALT 8. MOTOR
+        uint16_t pwm6; 	// AYNI ZAMANDA MOTORLARI AYRI AYRI SÜRMEK İÇİN
+        uint16_t pwm7; 	// BU KOMUTTAN SONRA TEKRARDAN MOTORLARI ÇALIŞTIRMAM GEREKİYOR
         uint16_t pwm8;
     } pwm_motors_for_stop_t;
 
+    typedef struct
+    {
+    	uint8_t arm_or_disarm;
+    } for_arm_t;
     typedef struct
     {
         rpc_service_t service;

@@ -14,15 +14,15 @@ float ALPHA2 = 0.2f;
 float KP = 4.f;
 float KI = 0.02f;
 float KD = 0.05f;
-float depth;
+float alpha_for_stabilize = 0.6f;
+uint8_t is_armed = 0;
 
-// PID Değişkenleri
-float integralX = 0, integralY = 0, pwmPITCH, pwmROLL;
-float prevErrorX = 0, prevErrorY = 0;
 
-float pitch_error_prev = 0, roll_error_prev = 0, yaw_error_prev = 0, depth_error = 0;
+float desired_depth = 0, depth = 0;
+
+float pitch_error_prev = 0, roll_error_prev = 0, yaw_error_prev = 0, depth_error_prev = 0;
 float pitch_integral = 0, roll_integral = 0, yaw_integral = 0, depth_integral = 0;
-float pitch_adjust, roll_adjust, yaw_adjust;
+float pitch_adjust, roll_adjust, yaw_adjust, depth_adjust, desired_yaw = 0;
 uint16_t pwm1,pwm2,pwm3,pwm4,pwm5,pwm6,pwm7,pwm8;
 
 static void esc_calibration_bidirectional(void);
@@ -33,6 +33,8 @@ static void update_motors(float pitch_setpoint,
                           float roll_setpoint,
                           float current_pitch,
                           float current_roll,
+						  float current_yaw,
+						  float current_depth,
                           float dt);
 
 static void calibrate_gyro(float *offsetX, float *offsetY, float *offsetZ);
@@ -41,6 +43,7 @@ void change_PWM_for_depth(float depth, float dt);
 
 void imu_thread(void *argument)
 {
+
     float angle_pitch = 0, angle_roll = 0, angle_yaw = 0, yaw = 0;
 
     int16_t gx, gy, gz;
@@ -62,10 +65,11 @@ void imu_thread(void *argument)
 
     while (1)
     {
-
+    	if(is_armed){
         ITG3205_Read(&temp, &gx, &gy, &gz);
         ADXL345_Read(&ax, &ay, &az);
-        BAR_30_Read(&depth);
+        BAR30_Read(&depth);
+
         uint32_t current_time = HAL_GetTick();
         const float delta_time = (current_time - last_time) / 1000.0f;
         last_time = current_time;
@@ -82,10 +86,16 @@ void imu_thread(void *argument)
         angle_roll = (1 - ALPHA2) * (angle_roll + gyro_y * delta_time) + ALPHA2 * acc_angle_roll;
         angle_yaw = (1 - ALPHA1) * (yaw + gyro_z * delta_time) + ALPHA1 * yaw;
 
-        update_motors(0, 0, angle_pitch, angle_roll, delta_time);
+        update_motors(0, 0, angle_pitch, angle_roll, angle_yaw, depth, delta_time);
 
-        osDelay(50);
-    }
+        osDelay(10);
+		}
+
+        else{
+			PWM_FOR_SINGLE_MOTOR_CONTROL(0, 0, 0, 0, 0, 0, 0, 0);
+		}
+}
+
 }
 
 static void esc_calibration_bidirectional(void)
@@ -149,46 +159,40 @@ float pid_control(float setpoint,
 
     return (KP * error) + (KI * (*integral));
 }
-//BUNU GÜNCELLE
-void yaw_update_motor(float desired_yaw, float dt){
 
-//	 int yaw_adjust = pid_control(desired_yaw, current_yaw, &yaw_integral, &yaw_error_prev, dt);
-//	 int pwm1,pwm2,pwm3,pwm4;
-//
-//	 __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, pwm1);
-//	 __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, pwm2);
-//	 __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, pwm3);
-//	 __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, pwm4);
-}
 
 
 static void update_motors(float pitch_setpoint,
                           float roll_setpoint,
                           float current_pitch,
                           float current_roll,
+						  float current_yaw,
+						  float current_depth,
                           float dt)
 {
 
     pitch_adjust = pid_control(0, current_pitch, &pitch_integral, &pitch_error_prev, dt);
     roll_adjust = pid_control(0, current_roll, &roll_integral, &roll_error_prev, dt);
+    yaw_adjust = pid_control(desired_yaw, current_yaw, &yaw_integral, &yaw_error_prev, dt);
+    depth_adjust = pid_control(desired_depth, current_depth, &depth_integral, &depth_error_prev, dt);
 
     //	8 MOTORLU ROV İÇİN
-    //     pwm1 = 1500 + pitchAdjust - rollAdjust; // Motor 1 - TIM1 CH1		//sol ön üst
-    //     pwm2 = 1500 + pitchAdjust + rollAdjust; // Motor 2 - TIM1 CH2		//sağ ön üst
-    //     pwm3 = 1500 - pitchAdjust + rollAdjust; // Motor 3 - TIM1 CH3		//sağ arka üst
-    //     pwm4 = 1500 - pitchAdjust - rollAdjust; // Motor 4 - TIM1 CH4		//sol arka üst
+    //     pwm1 = 1500 + (alpha_for_stabilize * depth_adjust ) + ((1- alpha_for_stabilize)*(pitchAdjust - rollAdjust)); // Motor 1 - TIM1 CH1sol ön üst
+         pwm2 = 1500 + (alpha_for_stabilize * depth_adjust ) + ((1- alpha_for_stabilize)*(pitch_adjust + roll_adjust)); // Motor 2 - TIM1 CH2		//sağ ön üst
+    //     pwm3 = 1500 - (alpha_for_stabilize * depth_adjust ) + ((1- alpha_for_stabilize)*(pitchAdjust + rollAdjust)); // Motor 3 - TIM1 CH3		//sağ arka üst
+    //     pwm4 = 1500 - (alpha_for_stabilize * depth_adjust ) + ((1- alpha_for_stabilize)*(pitchAdjust - rollAdjust)); // Motor 4 - TIM1 CH4		//sol arka üst
     // TIMERLARI BELLİ DEĞİL
     //     pwm5 = 1500 + yawAdjust;					// Motor 5 - TIM1 CH1		//sol ön
     //     pwm6 = 1500 - yawAdjust; 				// Motor 6 - TIM1 CH2		//sağ ön
     //     pwm7 = 1500 - yawAdjust; 				// Motor 7 - TIM1 CH3		//sağ arka
     //     pwm8 = 1500 + yawAdjust; 				// Motor 8 - TIM1 CH4		//sol arka
-	xSemaphoreTake(pwm_mutexHandle, portMAX_DELAY);
-    pwm4 = 1500 + pitch_adjust + roll_adjust; // Motor 4 - TIM1 CH4
+//	xSemaphoreTake(pwm_mutexHandle, portMAX_DELAY);
+    pwm4 = 1500 + (alpha_for_stabilize * 300 ) + ((1- alpha_for_stabilize)*(pitch_adjust + roll_adjust)); // Motor 4 - TIM1 CH4
     pwm4 = fmax(1000, fmin(2000, pwm4));
-	xSemaphoreGive(pwm_mutexHandle);
+//	xSemaphoreGive(pwm_mutexHandle);
 
     //    pwm1 = fmax(1100, fmin(1900, pwm1));
-    //    pwm2 = fmax(1100, fmin(1900, pwm2));
+        pwm2 = fmax(1100, fmin(1900, pwm2));
     //    pwm3 = fmax(1100, fmin(1900, pwm3));
     //    pwm4 = fmax(1100, fmin(1900, pwm4));
     //    pwm5 = fmax(1100, fmin(1900, pwm5));
@@ -201,7 +205,7 @@ static void update_motors(float pitch_setpoint,
     //    printf("%.2f, %.2f\n", pitchAdjust, rollAdjust);
 
     //    __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, pwm1);
-    //    __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, pwm2);
+        __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, pwm2);
     //    __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, pwm3);
     __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, pwm4);
 }
@@ -228,25 +232,25 @@ static void calibrate_gyro(float *offsetX, float *offsetY, float *offsetZ)
 }
 
 // THREAD EKLENECEK
-void change_PWM_for_depth(float desired_depth, float dt){
+//void change_PWM_for_depth(float desired_depth, float dt){
+//
+////    while(1){
+//
+//
+//	pwm1 = 1500 + PWM; // Motor 1 - TIM1 CH1		//sol ön üst
+//	pwm2 = 1500 + PWM; // Motor 2 - TIM1 CH2		//sağ ön üst
+//	pwm3 = 1500 + PWM; // Motor 3 - TIM1 CH3		//sağ arka üst
+//	pwm4 = 1500 + PWM; // Motor 4 - TIM1 CH4		//sol arka üst
+//
+////	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, pwm1);
+////	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, pwm2);
+////	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, pwm3);
+////	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, pwm4);
+////    }
+//}
 
-//    while(1){
-	float PWM = pid_control(desired_depth, depth, &depth_integral, &depth_error, dt);
-
-	pwm1 = 1500 + PWM; // Motor 1 - TIM1 CH1		//sol ön üst
-	pwm2 = 1500 + PWM; // Motor 2 - TIM1 CH2		//sağ ön üst
-	pwm3 = 1500 + PWM; // Motor 3 - TIM1 CH3		//sağ arka üst
-	pwm4 = 1500 + PWM; // Motor 4 - TIM1 CH4		//sol arka üst
-
-//	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, pwm1);
-//	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, pwm2);
-//	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, pwm3);
-//	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, pwm4);
-//    }
-}
-
-void PWM_FOR_SINGLE_MOTOR_CONTROL(int pwm1, int pwm2, int pwm3, int pwm4,  //FOR STOP OR DRIVE ENGINES ONE BY ONE
-                                  int pwm5, int pwm6, int pwm7,int pwm8)
+void PWM_FOR_SINGLE_MOTOR_CONTROL(uint16_t pwm1, uint16_t pwm2, uint16_t pwm3, uint16_t pwm4,  //FOR STOP OR DRIVE ENGINES ONE BY ONE
+								  uint16_t pwm5, uint16_t pwm6, uint16_t pwm7,uint16_t pwm8)
 {
     __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, pwm1);
     __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, pwm2);

@@ -10,14 +10,18 @@ extern "C"
 #include <stdbool.h>
 
 extern uint16_t pwm1,pwm2,pwm3,pwm4,pwm5,pwm6,pwm7,pwm8;
+extern uint8_t is_armed;
 
-extern float depth_integral, depth_error, depth;
-
-void PWM_FOR_SINGLE_MOTOR_CONTROL(int pwm1, int pwm2, int pwm3, int pwm4,  //FOR STOP OR DRIVE ENGINES ONE BY ONE
-                                  int pwm5, int pwm6, int pwm7,int pwm8);
-
-
-void yaw_update_motor(float desired_yaw, float dt);
+extern float depth_integral, depth_error, desired_yaw;
+extern float KP;
+extern float KI;
+extern float KD;
+extern float ALPHA;
+extern float ALPHA1;
+extern float ALPHA2;
+extern float alpha_for_stabilize;
+void PWM_FOR_SINGLE_MOTOR_CONTROL(uint16_t pwm1, uint16_t pwm2, uint16_t pwm3, uint16_t pwm4,  //FOR STOP OR DRIVE ENGINES ONE BY ONE
+								  uint16_t pwm5, uint16_t pwm6, uint16_t pwm7,uint16_t pwm8);
 
 float pid_control(float setpoint,
                          float measured,
