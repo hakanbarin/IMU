@@ -110,7 +110,7 @@ int main(void)
   osKernelStart();
 
   /* We should never get here as control is now taken by the scheduler */
-  imu_thread();
+
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
     while (1)

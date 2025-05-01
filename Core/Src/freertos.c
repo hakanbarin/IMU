@@ -61,16 +61,9 @@ const osThreadAttr_t rpc_task_attributes = {
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
-/* Definitions for depth_task */
-osThreadId_t depth_taskHandle;
-const osThreadAttr_t depth_task_attributes = {
-  .name = "depth_task",
-  .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityHigh,
-};
 /* Definitions for rpc_queue */
 osMessageQueueId_t rpc_queueHandle;
-uint8_t rpc_queue_buffer[ 8 * sizeof( RPC_MESSAGE_SIZE ) ];
+uint8_t rpc_queue_buffer[ 8 * sizeof( rpc_message_t ) ];
 osStaticMessageQDef_t rpc_queue_control_block;
 const osMessageQueueAttr_t rpc_queue_attributes = {
   .name = "rpc_queue",
@@ -78,16 +71,6 @@ const osMessageQueueAttr_t rpc_queue_attributes = {
   .cb_size = sizeof(rpc_queue_control_block),
   .mq_mem = &rpc_queue_buffer,
   .mq_size = sizeof(rpc_queue_buffer)
-};
-/* Definitions for depth_mutex */
-osMutexId_t depth_mutexHandle;
-const osMutexAttr_t depth_mutex_attributes = {
-  .name = "depth_mutex"
-};
-/* Definitions for pwm_mutex */
-osMutexId_t pwm_mutexHandle;
-const osMutexAttr_t pwm_mutex_attributes = {
-  .name = "pwm_mutex"
 };
 
 /* Private function prototypes -----------------------------------------------*/
@@ -97,7 +80,6 @@ const osMutexAttr_t pwm_mutex_attributes = {
 
 void imu_thread(void *argument);
 void rpc_thread(void *argument);
-void depth_thread(void *argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -110,12 +92,6 @@ void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN Init */
 
   /* USER CODE END Init */
-  /* Create the mutex(es) */
-  /* creation of depth_mutex */
-  depth_mutexHandle = osMutexNew(&depth_mutex_attributes);
-
-  /* creation of pwm_mutex */
-  pwm_mutexHandle = osMutexNew(&pwm_mutex_attributes);
 
   /* USER CODE BEGIN RTOS_MUTEX */
     /* add mutexes, ... */
@@ -131,7 +107,7 @@ void MX_FREERTOS_Init(void) {
 
   /* Create the queue(s) */
   /* creation of rpc_queue */
-  rpc_queueHandle = osMessageQueueNew (8, sizeof(RPC_MESSAGE_SIZE), &rpc_queue_attributes);
+  rpc_queueHandle = osMessageQueueNew (8, sizeof(rpc_message_t), &rpc_queue_attributes);
 
   /* USER CODE BEGIN RTOS_QUEUES */
     /* add queues, ... */
@@ -143,9 +119,6 @@ void MX_FREERTOS_Init(void) {
 
   /* creation of rpc_task */
   rpc_taskHandle = osThreadNew(rpc_thread, NULL, &rpc_task_attributes);
-
-  /* creation of depth_task */
-  depth_taskHandle = osThreadNew(depth_thread, NULL, &depth_task_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
     /* add threads, ... */
@@ -191,24 +164,6 @@ __weak void rpc_thread(void *argument)
         osDelay(1);
     }
   /* USER CODE END rpc_thread */
-}
-
-/* USER CODE BEGIN Header_depth_thread */
-/**
-* @brief Function implementing the depth_task thread.
-* @param argument: Not used
-* @retval None
-*/
-/* USER CODE END Header_depth_thread */
-__weak void depth_thread(void *argument)
-{
-  /* USER CODE BEGIN depth_thread */
-  /* Infinite loop */
-  for(;;)
-  {
-    osDelay(1);
-  }
-  /* USER CODE END depth_thread */
 }
 
 /* Private application code --------------------------------------------------*/

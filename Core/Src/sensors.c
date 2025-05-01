@@ -28,7 +28,7 @@ void BAR30_Read(float *depth)
 {
     uint8_t buffer[3];
     HAL_I2C_Master_Transmit(&hi2c1, MS5837_ADDR_Write, &MS5837_CONVERT_D1_8192, 1, HAL_MAX_DELAY);
-    HAL_Delay(20);
+    osDelay(20);
     // https://discuss.bluerobotics.com/t/ms5837-fast-sampling/478/3 FIRAT ABİYE SOR BUNU DA HAL DELAY KISMINI VE OKUMA HIZINI
 
     //	The conversion command is used to initiate uncompensated pressure (D1) or uncompensated temperature (D2)
@@ -42,7 +42,7 @@ void BAR30_Read(float *depth)
     D1 = (buffer[0] << 16 | buffer[1] << 8 | buffer[2]); // SADECE BASINCI OKUMAK İSTİYORUM
 
     HAL_I2C_Master_Transmit(&hi2c1, MS5837_ADDR_Write, &MS5837_CONVERT_D2_8192, 1, HAL_MAX_DELAY);
-    HAL_Delay(20);
+    osDelay(20);
 
     HAL_I2C_Master_Transmit(&hi2c1, MS5837_ADDR_Write, &MS5837_ADC_READ, 1, HAL_MAX_DELAY); // ADC READ İÇİN
 
@@ -60,7 +60,7 @@ int BAR30_init(void)
     uint8_t data[2];
 
     HAL_I2C_Master_Transmit(&hi2c1, MS5837_ADDR_Write, &cmd, 1, 100); // RESET YOLLUYORUZ
-    HAL_Delay(10);
+    osDelay(10);
 
     for (uint8_t i = 0; i < 7; i++)
     {

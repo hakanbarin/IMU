@@ -9,6 +9,7 @@ extern "C"
 #include <stdint.h>
 #include <stdbool.h>
 
+
     typedef enum
     {
         CALIBRATE_PID,
@@ -17,8 +18,11 @@ extern "C"
         COEFFICIENT_COMPLEMANTARY_FILTER,
         PWM_MOTORS_FOR_STOP,
 		FOR_ARM,
+		LED_CONTROL,
         NUM_OF_RPC_SERVICES
     } rpc_service_t;
+
+//#pragma pack(push, 0)
 
     typedef struct
     {
@@ -43,7 +47,6 @@ extern "C"
     	float alpha_for_yaw;
     	float alpha_for_roll;
     	float alpha_for_stabilize;
-
 	} coefficient_complemantary_t;
 
     typedef struct
@@ -62,19 +65,32 @@ extern "C"
     {
     	uint8_t arm_or_disarm;
     } for_arm_t;
+
+    typedef struct
+    {
+    	uint8_t led_aktif;
+    }led_kontrol;
+
+
     typedef struct
     {
         rpc_service_t service;
         union
 		{
-			set_degrees_of_yaw_t p1;
-			set_depth_cm_t p2;
-			pwm_motors_for_stop_t p3;
+        	calibrate_pid_t p1;
+			set_degrees_of_yaw_t p2;
+        	set_depth_cm_t p3;
+			set_depth_cm_t p4;
+			coefficient_complemantary_t p5;
+			pwm_motors_for_stop_t p6;
+			led_kontrol p7;
 		} data;
 
     } rpc_message_t;
 
-    extern volatile uint8_t rpc_rx_buffer[sizeof(rpc_message_t)];
+//#pragma pack(pop)
+
+
 
 #ifdef __cplusplus
 }

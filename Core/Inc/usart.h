@@ -35,7 +35,7 @@ extern "C" {
 extern UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN Private defines */
-
+extern volatile uint8_t rpc_rx_buffer[sizeof(rpc_message_t)];
 /* USER CODE END Private defines */
 
 void MX_USART2_UART_Init(void);

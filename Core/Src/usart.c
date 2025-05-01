@@ -23,6 +23,7 @@
 /* USER CODE BEGIN 0 */
 #include "cmsis_os.h"
 #include "queue.h"
+#include <string.h>
 /* USER CODE END 0 */
 
 UART_HandleTypeDef huart2;
@@ -140,7 +141,17 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
     (void)huart;
     BaseType_t priority = pdFALSE;
-    xQueueSendFromISR(rpc_queueHandle, rpc_rx_buffer, &priority);
+    xQueueSendFromISR(rpc_queueHandle, (const void*)rpc_rx_buffer, &priority);
 }
 
+//void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+//{
+//    (void)huart;
+//    rpc_message_t msg;
+//    memcpy(&msg, rpc_rx_buffer, sizeof(msg));
+//    BaseType_t priority = pdFALSE;
+//    xQueueSendFromISR(rpc_queueHandle, &msg, &priority);
+//}
+//
+//
 /* USER CODE END 1 */
