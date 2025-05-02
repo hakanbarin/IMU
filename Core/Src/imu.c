@@ -7,6 +7,10 @@
 #include "imu.h"
 #include "stdio.h"
 
+
+//KP KI KD değerleri atomic yapılması gerekebilir veya mutex kullanılabilir.
+//FreeRTOS'ta atomic nasıl yapılıyor bak.
+
 #define CALIBRATION_SAMPLES (200)
 #define CALIBRATION_SAMPLES_MAG (1000)
 
@@ -18,7 +22,7 @@ float KI = 0.02f;
 float KD = 0.05f;
 float alpha_for_stabilize = 0.6f;
 uint8_t is_armed = 0;
-uint8_t led_aktif_main = 1;
+float led_aktif_main = 2.5;
 
 
 float desired_depth = 0, depth = 0;
@@ -44,13 +48,15 @@ static void calibrate_gyro(float *offsetX, float *offsetY, float *offsetZ);
 
 void change_PWM_for_depth(float depth, float dt);
 
-void led_yaniyor(uint8_t led_deneme)
+
+
+void led_yaniyor(float led_deneme)
 {
 
 
-    if (led_deneme == 1)
+    if (fabs(led_deneme - 2.5) < 0.01)
     {
-        HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET); // LED sürekli yanık
+        HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET); // led surekli yanik
     }
     else
     {

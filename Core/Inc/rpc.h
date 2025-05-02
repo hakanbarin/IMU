@@ -68,7 +68,7 @@ extern "C"
 
     typedef struct
     {
-    	uint8_t led_aktif;
+    	float led_aktif;
     }led_kontrol;
 
 

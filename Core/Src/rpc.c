@@ -65,19 +65,20 @@ void rpc_thread(void *argument)
 
         // Gelen mesajı yazdır
         uint8_t *bytes = (uint8_t *)&msg;
-        printf("\n📥 Gelen Mesaj (rpc_message_t):\r\n");
-        for (int i = 0; i < sizeof(rpc_message_t); i++) {
-            printf("[%02d] = 0x%02X\r\n", i, bytes[i]);
-        }
+
+
+//
+//        led_kontrol* input = &msg.data;
+//        printf("kp = %f, ki = %f, kd = %f \r\n", input->kp, input->ki, input->kd);
+
+//        printf("kp = %d\r\n", input->led_aktif);
+
+        RPC_SERVICE_MAP[msg.service](&msg.data);
+
 
 //        printf("Service: %d | LED aktif: %d\n", msg.service, msg.data.p7.led_aktif);
+//        pwm_motors_for_stop_t *input = &msg.data;
 
-        pwm_motors_for_stop_t *input = &msg.data;
-
-        printf("kp = %d, ki = %d, kd = %d \r\n", input->pwm1, input->pwm2, input->pwm3);
-
-//        if (msg.service < NUM_OF_RPC_SERVICES)
-//            RPC_SERVICE_MAP[msg.service](&msg.data);
     }
 }
 
@@ -90,6 +91,7 @@ static void calibrate_PID(void *raw_input){
 	KP = input->kp;
 	KI = input->ki;
 	KD = input->kd;
+
 }
 
 
@@ -146,7 +148,7 @@ static void for_arm(void *raw_input){
 static void led_control(void *raw_input){
     led_kontrol *input = raw_input;
     led_aktif_main = input->led_aktif;
-    printf("LED aktif değeri alındı: %d\n", led_aktif_main);
+//    printf("LED aktif değeri alındı: %f\n", led_aktif_main);
 }
 
 

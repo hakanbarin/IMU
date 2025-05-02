@@ -34,9 +34,9 @@ void print_packet_hex(const rpc_message_t *msg) {
     }
 }
 
-int send_led_control(int led_on_raw)
+int send_led_control(float led_on_raw)
 {
-    uint8_t led_on = (uint8_t)led_on_raw;
+    float led_on = led_on_raw;
     HANDLE hSerial = CreateFileA(COM_PORT, GENERIC_WRITE, 0, NULL,
                                  OPEN_EXISTING, 0, NULL);
     if (hSerial == INVALID_HANDLE_VALUE) {
@@ -65,15 +65,15 @@ int send_led_control(int led_on_raw)
     rpc_message_t msg = {0};
     // memset(&msg, 0, sizeof(rpc_message_t));
     // ——————————— Alanları DOLDURALIM
-
-    msg.service = PWM_MOTORS_FOR_STOP;       // 0x06  → 4 byte (0x06, 0x00, 0x00, 0x00)
+    // msg.service = CALIBRATE_PID;
+    msg.service = LED_CONTROL; // 0x06  → 4 byte (0x06, 0x00, 0x00, 0x00)
 
     // // // union alanı 16 byte  ilk byte ‘led_aktif’ olarak kullanılacak
-
-    // msg.data.p7.led_aktif = led_on;
-    msg.data.p6.pwm1 = (56);
-    msg.data.p6.pwm2 = (15);
-    msg.data.p6.pwm3 = (325);
+    
+    msg.data.p7.led_aktif = led_on;
+    // msg.data.p1.kp = (float)(13.2);
+    // msg.data.p1.ki = (float)(15.1);
+    // msg.data.p1.kd = (float)(325.8);
 
     // for (int i = 1; i < 19; i++) {
     //     msg.data.raw[i] = 0xAA + i;         // diğer alanlara ayırt edici değerler (0xAB, 0xAC, ...)
@@ -99,7 +99,7 @@ int send_led_control(int led_on_raw)
 
 int main()
 {
-    return send_led_control(35);  
+    return send_led_control(2.5f);  
 }
 
 

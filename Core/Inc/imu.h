@@ -10,7 +10,8 @@ extern "C"
 #include <stdbool.h>
 
 extern uint16_t pwm1,pwm2,pwm3,pwm4,pwm5,pwm6,pwm7,pwm8;
-extern uint8_t is_armed,led_aktif_main;
+extern uint8_t is_armed;
+extern float led_aktif_main;
 
 extern float depth_integral, depth_error, desired_yaw;
 extern float KP;
