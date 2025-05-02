@@ -10,6 +10,7 @@ extern "C"
 #include <stdbool.h>
 
 
+
     typedef enum
     {
         CALIBRATE_PID,
@@ -80,9 +81,9 @@ extern "C"
         	calibrate_pid_t p1;
 			set_degrees_of_yaw_t p2;
         	set_depth_cm_t p3;
-			set_depth_cm_t p4;
-			coefficient_complemantary_t p5;
-			pwm_motors_for_stop_t p6;
+			coefficient_complemantary_t p4;
+			pwm_motors_for_stop_t p5;
+			for_arm_t p6;
 			led_kontrol p7;
 		} data;
 

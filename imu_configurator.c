@@ -99,7 +99,7 @@ int send_led_control(float led_on_raw)
 
 int main()
 {
-    return send_led_control(2.5f);  
+    return send_led_control(2.5f);
 }
 
 

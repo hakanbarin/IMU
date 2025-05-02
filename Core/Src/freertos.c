@@ -49,6 +49,7 @@ typedef StaticQueue_t osStaticMessageQDef_t;
 /* USER CODE END Variables */
 /* Definitions for imu_task */
 osThreadId_t imu_taskHandle;
+
 const osThreadAttr_t imu_task_attributes = {
   .name = "imu_task",
   .stack_size = 128 * 4,

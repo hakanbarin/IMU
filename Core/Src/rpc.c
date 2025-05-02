@@ -10,7 +10,10 @@
 #include "stdio.h"
 #include "string.h"
 
+extern osThreadId_t imu_taskHandle;
+
 volatile uint8_t rpc_rx_buffer[sizeof(rpc_message_t)];
+
 
 typedef void (*rpc_handler_t)(void*);
 
@@ -87,39 +90,58 @@ void rpc_thread(void *argument)
 
 static void calibrate_PID(void *raw_input){
 
-	calibrate_pid_t *input = raw_input;
-	KP = input->kp;
-	KI = input->ki;
-	KD = input->kd;
+    osThreadSuspend(imu_taskHandle);
 
+    calibrate_pid_t *input = raw_input;
+
+
+    KP = input->kp;
+    KI = input->ki;
+    KD = input->kd;
+
+    osThreadResume(imu_taskHandle);
 }
 
 
 static void set_degrees_of_yaw(void *raw_input) // abi burada yaw açısını da updatemotorda değiştiriyorum ondan dolayı fonksiyonu çağırmam gerekiyor
 {                                               // onun yerine ayrı bir fonksiyon olarak mı çağırayım
+    osThreadSuspend(imu_taskHandle);
 
     set_degrees_of_yaw_t *input = raw_input;
 
+
     desired_yaw = input->degrees;
 
+    osThreadResume(imu_taskHandle);
 }
 
 static void set_depth_cm(void *raw_input)
 {
+
+    osThreadSuspend(imu_taskHandle);
+
     set_depth_cm_t *input = raw_input;
 //    xSemaphoreTake(depth_mutexHandle, portMAX_DELAY);
+
     desired_depth = input->cm;
 //    xSemaphoreGive(depth_mutexHandle);
+
+    osThreadResume(imu_taskHandle);
 }
 
 static void coefficient_complemantary_filters(void *raw_input){
 
+    osThreadSuspend(imu_taskHandle);
+
 	coefficient_complemantary_t *input = raw_input;
+
 
 	ALPHA  = input->alpha_for_pitch;
 	ALPHA1 = input->alpha_for_yaw;
 	ALPHA2 = input->alpha_for_roll;
 	alpha_for_stabilize = input->alpha_for_stabilize;
+
+    osThreadResume(imu_taskHandle);
 }
 
 
@@ -141,14 +163,28 @@ static void pwm_motors_for_drive_one_by_one(void *raw_input)
 }
 
 static void for_arm(void *raw_input){
+
+    osThreadSuspend(imu_taskHandle);
+
 	for_arm_t *input = raw_input;
 	is_armed = input->arm_or_disarm;
+
+    osThreadResume(imu_taskHandle);
 }
 
 static void led_control(void *raw_input){
+
+    osThreadSuspend(imu_taskHandle);
+
     led_kontrol *input = raw_input;
+
+
+
+
     led_aktif_main = input->led_aktif;
+
 //    printf("LED aktif değeri alındı: %f\n", led_aktif_main);
+    osThreadResume(imu_taskHandle);
 }
 
 
