@@ -143,9 +143,7 @@ void led_control(float led_aktif) {
 int main(void) {
     // Example usage:
 
-    led_control(2.5f);
 
-    printf("LED turned on\n");
 
     calibrate_PID(12.5f, 0.8f, 0.02f);
 
@@ -169,8 +167,12 @@ int main(void) {
     );
     printf("PWM values for 8 motors sent\n");
 
-    for_arm(2);
+    for_arm(1);
     printf("System armed\n");
+
+    led_control(2.5f);
+
+    printf("LED turned on\n");
 
     return 0;
 }

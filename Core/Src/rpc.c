@@ -1,19 +1,20 @@
+#include <stdio.h>
+#include <string.h>
+#include <cmsis_os.h>
+#include <task.h>
+#include <semphr.h>
 #include "rpc.h"
 #include "gpio.h"
 #include "usart.h"
-#include "cmsis_os.h"
 #include "queue.h"
-#include "task.h"
 #include "imu.h"
 #include "depth.h"
-#include "semphr.h"
-#include "stdio.h"
-#include "string.h"
 
 extern osThreadId_t imu_taskHandle;
 
 volatile uint8_t rpc_rx_buffer[sizeof(rpc_message_t)];
 
+extern uint16_t pwm1,pwm2,pwm3,pwm4,pwm5,pwm6,pwm7,pwm8;
 
 typedef void (*rpc_handler_t)(void*);
 
@@ -65,23 +66,11 @@ void rpc_thread(void *argument)
     {
         // Kuyruktan veri gelene kadar bekle
         xQueueReceive(rpc_queueHandle, &msg, portMAX_DELAY);
-
-        // Gelen mesajı yazdır
-        uint8_t *bytes = (uint8_t *)&msg;
-
-
-//
+        RPC_SERVICE_MAP[msg.service](&msg.data);
+//        uint8_t *bytes = (uint8_t *)&msg;
 //        led_kontrol* input = &msg.data;
 //        printf("kp = %f, ki = %f, kd = %f \r\n", input->kp, input->ki, input->kd);
-
 //        printf("kp = %d\r\n", input->led_aktif);
-
-        RPC_SERVICE_MAP[msg.service](&msg.data);
-
-
-//        printf("Service: %d | LED aktif: %d\n", msg.service, msg.data.p7.led_aktif);
-//        pwm_motors_for_stop_t *input = &msg.data;
-
     }
 }
 
@@ -147,11 +136,17 @@ static void coefficient_complemantary_filters(void *raw_input){
 
 static void pwm_motors_for_drive_one_by_one(void *raw_input)
 {
+
     pwm_motors_for_stop_t *input = raw_input;
     // SOL ÖN 1, SAĞ ÖN 2, SAĞ ARKA 3, SOL ARKA 4, SOL ÜST 5, SAĞ ÜST 6, SAĞ ALT 7, SOL ALT 8. MOTOR
-    PWM_FOR_SINGLE_MOTOR_CONTROL(input->pwm1, input->pwm2,input->pwm3,input->pwm4
-                                 ,input->pwm5,input->pwm6,input->pwm7,input->pwm8);
-
+    pwm1 = input->pwm1;
+    pwm2 = input->pwm2;
+    pwm3 = input->pwm3;
+    pwm4 = input->pwm4;
+    pwm5 = input->pwm5;
+    pwm6 = input->pwm6;
+    pwm7 = input->pwm7;
+    pwm8 = input->pwm8;
 
 //   1               2
 //       5        6
@@ -177,9 +172,6 @@ static void led_control(void *raw_input){
     osThreadSuspend(imu_taskHandle);
 
     led_kontrol *input = raw_input;
-
-
-
 
     led_aktif_main = input->led_aktif;
 

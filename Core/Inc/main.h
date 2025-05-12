@@ -31,7 +31,7 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "cmsis_os.h"
+#include <cmsis_os.h>
 #include "rpc.h"
 /* USER CODE END Includes */
 
