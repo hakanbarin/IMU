@@ -13,7 +13,7 @@
 #define MS5837_CMD_CONVERT_D2_8192 0x5A
 #define MS5837_CMD_PROM_READ    0xA0 // PROM okuma başlangıcı
 
-uint16_t C[7];   // PROM doğrulama katsayıları
+uint16_t C[8];   // PROM doğrulama katsayıları
 uint32_t D1, D2;
 int32_t TEMP_Bar30;
 int32_t P;
@@ -83,7 +83,7 @@ int BAR30_init(void)
     osDelay(10);
 
     // PROM veri katsayılarını oku
-    for (uint8_t i = 0; i < 7; i++)
+    for (uint8_t i = 0; i < 8; i++)
     {
         HAL_I2C_Mem_Read(&hi2c1,
                          BAR30_I2C_ADDR,
@@ -164,7 +164,7 @@ float calculate()
     SENS2 = SENS - SENSi;
     TEMP_Bar30 -= Ti;
 
-    P = (((D1 * SENS2) / 2097152L - OFF2) / 8192L) / 10;
+    P = (((D1 * SENS2) / 2097152L - OFF2) / 8192L) / 10.0;
     return P;
 }
 

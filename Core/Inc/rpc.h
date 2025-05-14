@@ -20,6 +20,7 @@ extern "C"
         PWM_MOTORS_FOR_STOP,
 		FOR_ARM,
 		LED_CONTROL,
+		MOTOR_ARM,
         NUM_OF_RPC_SERVICES
     } rpc_service_t;
 
@@ -71,7 +72,6 @@ extern "C"
     {
     	float led_aktif;
     }led_kontrol;
-
 
     typedef struct
     {

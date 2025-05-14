@@ -32,6 +32,7 @@ float pid_control(float setpoint,
 
 
 
+void try_to_engine(void);
 
 #ifdef __cplusplus
 }

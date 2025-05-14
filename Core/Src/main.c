@@ -28,6 +28,11 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "sensors.h"
+#include "stdio.h"
+#include "ms5837.h"
+
+//MS5837_HandleTypeDef depthSensor;
+//float                surfacePressure;
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -105,6 +110,18 @@ int main(void)
 
   /* Call init function for freertos objects (in cmsis_os2.c) */
   MX_FREERTOS_Init();
+
+//  ITG3205_Init();
+//  printf("– ITG init bitti\r\n");
+//
+//  ADXL345_Init();
+//  printf("– ADXL init bitti\r\n");
+//
+//  HMC5883L_Init();
+//  printf("– HMC init bitti\r\n");
+//
+//  MS5837_Init(&depthSensor, &hi2c1, 0);
+//  MS5837_SetDensity(&depthSensor, 0.99802f);
 
   /* Start scheduler */
   osKernelStart();

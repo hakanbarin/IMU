@@ -145,34 +145,35 @@ int main(void) {
 
 
 
-    calibrate_PID(12.5f, 0.8f, 0.02f);
+    // calibrate_PID(12.5f, 0.8f, 0.02f);
 
-    printf("PID gains sent: Kp=12.5, Ki=0.8, Kd=0.02\n");
+    // printf("PID gains sent: Kp=12.5, Ki=0.8, Kd=0.02\n");
 
-    set_degrees_of_yaw(90.0f);
+    // set_degrees_of_yaw(90.0f);
 
-    printf("Desired yaw set to 45°\n");
+    // printf("Desired yaw set to 45°\n");
 
-    set_depth_cm(150.0f);
+    // set_depth_cm(150.0f);
 
-    printf("Desired depth set to 150 cm\n");
+    // printf("Desired depth set to 150 cm\n");
 
-    set_complementary_filters(0.02f, 0.02f, 0.02f, 0.5f);
+    // set_complementary_filters(0.02f, 0.02f, 0.02f, 0.5f);
 
-    printf("Complementary filter coefficients sent\n");
+    // printf("Complementary filter coefficients sent\n");
 
+    for_arm(2);
+    // for_arm(1);
     pwm_motors_for_drive_one_by_one(
-        1200,1200,1200,1200,
-        1200,1200,1200,1200
+        1300,1800,1300,1200,
+        0,0,0,0
     );
-    printf("PWM values for 8 motors sent\n");
+    // printf("PWM values for 8 motors sent\n");
 
-    for_arm(1);
-    printf("System armed\n");
+    // printf("System armed\n");
 
-    led_control(2.5f);
+    // led_control(2.5f);
 
-    printf("LED turned on\n");
+    // printf("LED turned on\n");
 
     return 0;
 }

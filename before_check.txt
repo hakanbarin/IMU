@@ -1,0 +1,5 @@
+IMU çalışıyor mu?
+
+IMU'dan veri alabiliyor musun?
+
+BAR30'dan veri alabiliyor musun?

@@ -137,6 +137,25 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle)
 
 /* USER CODE BEGIN 1 */
 
+//void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
+//    if (huart == &huart2) {
+//        rpc_message_t msg;
+//        memcpy(&msg, rpc_rx_buffer, sizeof(msg));
+//
+//        // CMSIS-RTOS içinden ISR’den mesaj kuyruğuna ekle
+//        osStatus_t st = osMessageQueuePut(rpc_queueHandle,
+//                                          &msg,
+//                                          0,
+//                                          0); // timeout=0: ISR’den hemen ekle
+//        (void)st;
+//
+//        // Yeni paket için DMA’yı yeniden başlat
+//        HAL_UART_Receive_DMA(&huart2,
+//                             (uint8_t*)rpc_rx_buffer,
+//                             sizeof(rpc_message_t));
+//    }
+//}
+
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
     (void)huart;

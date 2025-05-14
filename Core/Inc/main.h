@@ -60,7 +60,7 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define PWM_PREDIV 48
+#define PWM_PREDIV 8
 #define PWM_PERIOD 20000
 #define B1_Pin GPIO_PIN_13
 #define B1_GPIO_Port GPIOC
