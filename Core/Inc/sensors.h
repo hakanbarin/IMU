@@ -28,6 +28,8 @@ extern "C"
 
     uint8_t crc4(uint16_t n_prom[]);
 
+    void apply_mag_calibration(int16_t , int16_t , int16_t, int16_t *, int16_t *, int16_t *);
+
 #ifdef __cplusplus
 }
 #endif

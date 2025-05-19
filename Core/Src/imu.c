@@ -117,7 +117,9 @@ void imu_thread(void *argument)
 
     int16_t gx, gy, gz;
     int16_t ax, ay, az;
+    int16_t mx, my, mz;
     int16_t temp;
+    int16_t cal_mx, cal_my, cal_mz;
 
 
     float gyro_x_offset, gyro_y_offset, gyro_z_offset;
@@ -169,6 +171,9 @@ void imu_thread(void *argument)
 			ADXL345_Read(&ax, &ay, &az);
 //			BAR30_Read(&depth);
 
+			HMC5883L_Read(&mx, &my, &mz);
+			apply_mag_calibration(mx, my, mz, &cal_mx, &cal_my, &cal_mz);
+
 			MS5837_Read(&depthSensor, 13);
 
 			depth = MS5837_GetDepth(&depthSensor, surfacePressure);
@@ -186,9 +191,24 @@ void imu_thread(void *argument)
 			const float acc_angle_roll = -(atan2f(ax, az) * 180.0f / M_PI);
 			yaw += gyro_z * delta_time;
 
+		 // Tilt-compensated yaw hesapla
+			const float pitchRad = acc_angle_pitch * M_PI / 180.0f;
+			const float rollRad  = acc_angle_roll  * M_PI / 180.0f;
+
+			const float mx_comp = cal_mx * cos(pitchRad) + cal_mz * sin(pitchRad);
+			const float my_comp = cal_mx * sin(rollRad) * sin(pitchRad) +
+							cal_my * cos(rollRad) -
+							cal_mz * sin(rollRad) * cos(pitchRad);
+
+			float magYaw = atan2f(my_comp, mx_comp) * 180.0f / M_PI;
+
+			if (magYaw < 0) magYaw += 360.0f;
+
+
 			angle_pitch = (1 - ALPHA) * (angle_pitch + gyro_x * delta_time) + ALPHA * acc_angle_pitch;
 			angle_roll = (1 - ALPHA2) * (angle_roll + gyro_y * delta_time) + ALPHA2 * acc_angle_roll;
-			angle_yaw = (1 - ALPHA1) * (yaw + gyro_z * delta_time) + ALPHA1 * yaw;
+			angle_yaw   = (1 - ALPHA1) * yaw + ALPHA1 * magYaw;
+
 
 			printf(" motor update olcakr\n");
 			update_motors(0, 0, angle_pitch, angle_roll, angle_yaw, depth, delta_time);
