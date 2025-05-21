@@ -6,11 +6,8 @@
 #include "sensors.h"
 #include "task.h"
 #include "imu.h"
-#include "ms5837.h"
+#include "bar30.h"
 
-MS5837_HandleTypeDef depthSensor;
-float                surfacePressure;
-extern I2C_HandleTypeDef hi2c1;				//eğer main.c de kütüphaneleri başlatacaksan bu satırı yoruma al yukarı ikiliyi extern yap maindekini yorumları da aç
 
 #define CALIBRATION_SAMPLES (200)
 //#define CALIBRATION_SAMPLES_MAG (1000)
@@ -120,47 +117,20 @@ void imu_thread(void *argument)
     int16_t mx, my, mz;
     int16_t temp;
     int16_t cal_mx, cal_my, cal_mz;
-
-
     float gyro_x_offset, gyro_y_offset, gyro_z_offset;
 
-    // Sonra sensor init’ler
+
     ITG3205_Init();
-    printf("– ITG init bitti\r\n");
-
     ADXL345_Init();
-    printf("– ADXL init bitti\r\n");
-
     HMC5883L_Init();
-    printf("– HMC init bitti\r\n");
-
-    MS5837_Init(&depthSensor, &hi2c1, 0);
-    MS5837_SetDensity(&depthSensor, 0.99802f);
+    BAR30_Init();
 
     calibrate_gyro(&gyro_x_offset, &gyro_y_offset, &gyro_z_offset);
-    printf("– kalibrasyon bitti, try_to_engine giriyor\r\n");
-
-
 
 //    while(protection_function() != ARM_SUCCESFUL);
 
     uint32_t last_time = osKernelGetTickCount();
     try_to_engine();
-
-    printf(" try_to_engine tamamlandı\r\n");
-
-//    	int pulsee = 1050;
-//    	while(pulsee <= 1850){
-//
-//    	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, pulsee);
-//    	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, pulsee);
-//    	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, pulsee);
-//    	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, pulsee);
-//    	printf("%d\n",pulsee);
-//    	pulsee++;
-//    	osDelay(100);
-//
-//    	}
 
     while (1)
     {
@@ -169,16 +139,13 @@ void imu_thread(void *argument)
 
 			ITG3205_Read(&temp, &gx, &gy, &gz);
 			ADXL345_Read(&ax, &ay, &az);
-//			BAR30_Read(&depth);
+			BAR30_Read(&depth);
 
 			HMC5883L_Read(&mx, &my, &mz);
 			apply_mag_calibration(mx, my, mz, &cal_mx, &cal_my, &cal_mz);
 
-			MS5837_Read(&depthSensor, 13);
 
-			depth = MS5837_GetDepth(&depthSensor, surfacePressure);
 
-		    printf(" okudum hepsini\r\n");
 			uint32_t current_time = osKernelGetTickCount();
 			const float delta_time = (current_time - last_time) / 1000.0f;
 			last_time = current_time;
@@ -191,7 +158,7 @@ void imu_thread(void *argument)
 			const float acc_angle_roll = -(atan2f(ax, az) * 180.0f / M_PI);
 			yaw += gyro_z * delta_time;
 
-		 // Tilt-compensated yaw hesapla
+
 			const float pitchRad = acc_angle_pitch * M_PI / 180.0f;
 			const float rollRad  = acc_angle_roll  * M_PI / 180.0f;
 
@@ -210,7 +177,7 @@ void imu_thread(void *argument)
 			angle_yaw   = (1 - ALPHA1) * yaw + ALPHA1 * magYaw;
 
 
-			printf(" motor update olcakr\n");
+
 			update_motors(0, 0, angle_pitch, angle_roll, angle_yaw, depth, delta_time);
 //			osDelay(50);
 
@@ -376,14 +343,14 @@ static void calibrate_gyro(float *offsetX, float *offsetY, float *offsetZ)
 
     for (int i = 0; i < CALIBRATION_SAMPLES; i++)
     {
-        ITG3205_Read(&temp, &gx, &gy, &gz); // Jiroskop verilerini oku
+        ITG3205_Read(&temp, &gx, &gy, &gz);
         sumX += gx / 14.375f;               // X ekseni ölçeklendirme
         sumY += gy / 14.375f;               // Y ekseni ölçeklendirme
         sumZ += gz / 14.375f;               // Z ekseni ölçeklendirme
-        osDelay(10);                      // 10ms bekle
+        osDelay(10);
     }
 
-    // Ortalama ofset değerlerini hesapla
+
     *offsetX = sumX / CALIBRATION_SAMPLES;
     *offsetY = sumY / CALIBRATION_SAMPLES;
     *offsetZ = sumZ / CALIBRATION_SAMPLES;

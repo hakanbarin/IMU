@@ -56,54 +56,6 @@ void rpc_thread(void *argument)
     }
 }
 
-//void rpc_thread(void *argument)
-//{
-//    (void)argument;
-//    rpc_message_t msg;
-//
-//    printf("rpc_thread başladı. rpc_message_t boyutu: %d\n", sizeof(rpc_message_t));
-//    HAL_UART_Receive_DMA(&huart2,(uint8_t *)rpc_rx_buffer, sizeof(rpc_rx_buffer));
-//
-//
-//    while (1)
-//    {
-//        // Kuyruktan veri gelene kadar bekle
-//        xQueueReceive(rpc_queueHandle, &msg, portMAX_DELAY);
-//        RPC_SERVICE_MAP[msg.service](&msg.data);
-////        uint8_t *bytes = (uint8_t *)&msg;
-////        led_kontrol* input = &msg.data;
-////        printf("kp = %f, ki = %f, kd = %f \r\n", input->kp, input->ki, input->kd);
-////        printf("kp = %d\r\n", input->led_aktif);
-//    }
-//}
-
-//void rpc_thread(void *argument) {
-//	osDelay(20000);
-//    rpc_message_t msg;
-//
-//    printf("rpc_thread başladı (rpc_message_t size = %u)\r\n",
-//           (unsigned)sizeof(rpc_message_t));
-//
-//    // İlk DMA alımını başlat
-//    HAL_UART_Receive_DMA(&huart2,
-//                         (uint8_t*)rpc_rx_buffer,
-//                         sizeof(rpc_message_t));
-//
-//    for (;;) {
-//        // Mesaj gelene kadar tamamen blokla (CPU başka thread’e gider)
-//        if (osMessageQueueGet(rpc_queueHandle,
-//                              &msg,
-//                              NULL,
-//                              osWaitForever) == osOK) {
-//
-//		RPC_SERVICE_MAP[msg.service](&msg.data);
-//
-//        }
-//    }
-//}
-
-
-
 
 static void calibrate_PID(void *raw_input){
 
@@ -210,7 +162,3 @@ static void led_control(void *raw_input){
 static void motor_arm(void *raw_input){
 	try_to_engine();
 }
-
-
-
-
